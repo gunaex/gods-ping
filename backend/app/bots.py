@@ -607,7 +607,9 @@ async def start_gods_hand_entry(user_id: int, db: Session, continuous: bool = Tr
 
 async def stop_bot(bot_type: str, user_id: int, db: Session) -> dict:
     """Stop a running bot"""
-    bot_key = f"{bot_type}_{user_id}"
+    # Normalize bot type to internal key format (use underscores)
+    normalized = bot_type.replace('-', '_') if bot_type else bot_type
+    bot_key = f"{normalized}_{user_id}"
     
     if bot_key in bot_status:
         bot_status[bot_key] = "stopped"
@@ -619,12 +621,12 @@ async def stop_bot(bot_type: str, user_id: int, db: Session) -> dict:
         
         return {
             "status": "success",
-            "message": f"{bot_type} bot stopped"
+            "message": f"{normalized} bot stopped"
         }
     else:
         return {
             "status": "info",
-            "message": f"{bot_type} bot is not running"
+            "message": f"{normalized} bot is not running"
         }
 
 

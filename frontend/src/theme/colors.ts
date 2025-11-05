@@ -136,8 +136,23 @@ export const colors = {
 
 // Helper function to get contrasting text color
 export const getContrastText = (bgColor: string): string => {
-  // For warm theme, use warm dark on light backgrounds
-  return colors.text.primary;
+  // Determine contrast based on background luminance (simple hex parser)
+  const hex = bgColor.startsWith('#') ? bgColor.slice(1) : bgColor;
+  // Fallback for rgba/transparent: default to primary text
+  if (hex.length !== 3 && hex.length !== 6) {
+    return colors.text.primary;
+  }
+  const fullHex = hex.length === 3
+    ? hex.split('').map(c => c + c).join('')
+    : hex;
+  const r = parseInt(fullHex.slice(0, 2), 16) / 255;
+  const g = parseInt(fullHex.slice(2, 4), 16) / 255;
+  const b = parseInt(fullHex.slice(4, 6), 16) / 255;
+  // Relative luminance (WCAG)
+  const srgb = [r, g, b].map(c => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+  const luminance = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  // If background is light, return dark text; else return inverse (light) text
+  return luminance > 0.5 ? colors.text.primary : colors.text.inverse;
 };
 
 // Typography - Warm and friendly

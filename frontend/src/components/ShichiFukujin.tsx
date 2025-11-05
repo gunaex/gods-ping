@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { 
-  LogOut, Settings, TrendingUp, BarChart3, Bot, 
-  Zap, DollarSign, Clock, FileText 
+  LogOut, Settings, Clock, FileText 
 } from 'lucide-react';
 import { useStore } from '../store';
-import { tradingAPI, marketAPI, aiAPI, botAPI } from '../api';
+import { tradingAPI } from '../api';
 import TradingPairSelector from './TradingPairSelector';
 import AIRecommendation from './AIRecommendation';
 import AccountBalance from './AccountBalance';
@@ -109,8 +108,8 @@ export default function ShichiFukujin() {
       {/* Section 3: Account Balance & P/L */}
       <AccountBalance symbol={selectedSymbol} fiatCurrency={fiatCurrency} />
 
-      {/* Section 4: Market Data & Chart */}
-      <MarketData symbol={selectedSymbol} fiatCurrency={fiatCurrency} />
+  {/* Section 4: Market Data & Chart */}
+  <MarketData symbol={selectedSymbol} />
 
       <div className="grid grid-2">
         {/* Section 5: Grid Bot & DCA Bot */}
@@ -123,7 +122,7 @@ export default function ShichiFukujin() {
       {/* Section 7: Gods Hand */}
       <GodsHand symbol={selectedSymbol} />
 
-      {/* Logs Modal */}
+  {/* Logs Modal */}
       {showLogs && (
         <LogsModal onClose={() => setShowLogs(false)} />
       )}

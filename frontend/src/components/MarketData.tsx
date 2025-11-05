@@ -5,10 +5,9 @@ import { marketAPI } from '../api';
 
 interface MarketDataProps {
   symbol: string;
-  fiatCurrency: string;
 }
 
-export default function MarketData({ symbol, fiatCurrency }: MarketDataProps) {
+export default function MarketData({ symbol }: MarketDataProps) {
   const [ticker, setTicker] = useState<any>(null);
   const [candles, setCandles] = useState<any[]>([]);
   const chartContainerRef = useRef<HTMLDivElement>(null);
