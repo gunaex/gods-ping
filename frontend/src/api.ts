@@ -34,6 +34,9 @@ export const marketAPI = {
   
   getOrderbook: (symbol: string, limit: number = 20) =>
     api.get(`/market/orderbook/${symbol}`, { params: { limit } }),
+  
+  getForecast: (symbol: string, forecastHours: number = 6) =>
+    api.get(`/market/forecast/${symbol}`, { params: { forecast_hours: forecastHours } }),
 };
 
 export const aiAPI = {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, TrendingUp, RefreshCw } from 'lucide-react';
 import { createChart, ColorType } from 'lightweight-charts';
 import { marketAPI } from '../api';
 
@@ -10,22 +10,27 @@ interface MarketDataProps {
 export default function MarketData({ symbol }: MarketDataProps) {
   const [ticker, setTicker] = useState<any>(null);
   const [candles, setCandles] = useState<any[]>([]);
+  const [forecast, setForecast] = useState<any>(null);
+  const [showForecast, setShowForecast] = useState(true);
   const [tooltipData, setTooltipData] = useState<any>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
   const seriesRef = useRef<any>(null);
+  const forecastSeriesRef = useRef<any>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   // Load market data when symbol changes
   useEffect(() => {
     const loadMarketData = async () => {
       try {
-        const [tickerRes, candlesRes] = await Promise.all([
+        const [tickerRes, candlesRes, forecastRes] = await Promise.all([
           marketAPI.getTicker(symbol),
           marketAPI.getCandles(symbol, '1h', 100),
+          marketAPI.getForecast(symbol, 6),
         ]);
         setTicker(tickerRes.data);
         setCandles(candlesRes.data.candles);
+        setForecast(forecastRes.data);
       } catch (error) {
         console.error('Failed to load market data:', error);
       }
@@ -77,8 +82,19 @@ export default function MarketData({ symbol }: MarketDataProps) {
       wickDownColor: '#f87171',
     });
 
+    // Add forecast line series (earth tone blue, dashed)
+    const forecastLine = chart.addLineSeries({
+      color: '#4A90E2',
+      lineWidth: 2,
+      lineStyle: 2, // Dashed line
+      priceLineVisible: false,
+      lastValueVisible: true,
+      title: 'Forecast',
+    });
+
     chartRef.current = chart;
     seriesRef.current = candlestickSeries;
+    forecastSeriesRef.current = forecastLine;
 
     // Subscribe to crosshair move to show tooltip with time
     chart.subscribeCrosshairMove((param) => {
@@ -168,13 +184,101 @@ export default function MarketData({ symbol }: MarketDataProps) {
     }
   }, [candles]);
 
+  // Update forecast line when forecast data changes
+  useEffect(() => {
+    if (!forecastSeriesRef.current || !forecast || !showForecast) {
+      // Hide forecast line if disabled
+      if (forecastSeriesRef.current && !showForecast) {
+        try {
+          forecastSeriesRef.current.setData([]);
+        } catch (e) {
+          console.warn('Forecast clear skipped:', e);
+        }
+      }
+      return;
+    }
+
+    try {
+      // Get current price from last candle
+      const lastCandle = candles[candles.length - 1];
+      if (!lastCandle || !forecast.forecast) return;
+
+      const currentTime = lastCandle.timestamp / 1000;
+      const currentPrice = lastCandle.close;
+
+      // Build forecast line data: start from current price, extend to predictions
+      const forecastData = [
+        { time: currentTime, value: currentPrice },
+        ...forecast.forecast.map((f: any) => ({
+          time: f.timestamp / 1000,
+          value: f.predicted_price,
+        })),
+      ];
+
+      forecastSeriesRef.current.setData(forecastData);
+    } catch (e) {
+      console.warn('Forecast update skipped:', e);
+    }
+  }, [forecast, candles, showForecast]);
+
   // Removed renderChart; chart lifecycle handled in effects above
 
   return (
     <div className="section-card">
-      <div className="section-title">
-        <BarChart3 />
-        Market Data & Candlestick Chart
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <BarChart3 />
+          Market Data & Candlestick Chart
+        </div>
+        
+        {/* Forecast controls */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowForecast(!showForecast)}
+            style={{
+              padding: '8px 16px',
+              background: showForecast ? '#4A90E2' : 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '6px',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s',
+            }}
+          >
+            <TrendingUp size={16} />
+            {showForecast ? 'Hide Forecast' : 'Show Forecast'}
+          </button>
+          
+          <button
+            onClick={async () => {
+              try {
+                const forecastRes = await marketAPI.getForecast(symbol, 6);
+                setForecast(forecastRes.data);
+              } catch (error) {
+                console.error('Failed to refresh forecast:', error);
+              }
+            }}
+            style={{
+              padding: '8px 12px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '6px',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              transition: 'all 0.2s',
+            }}
+            title="Refresh forecast"
+          >
+            <RefreshCw size={16} />
+          </button>
+        </div>
       </div>
 
       {ticker && (
