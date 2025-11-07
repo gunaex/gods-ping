@@ -23,8 +23,5 @@ numpy>=1.26.2
 requests>=2.31.0
 python-dotenv>=1.0.0
 
-# CORS Support
-python-cors>=1.0.0
-
 # Production Server
 gunicorn>=21.2.0
