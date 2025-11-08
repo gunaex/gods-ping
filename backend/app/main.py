@@ -41,6 +41,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Debug endpoint to verify active CORS configuration (remove in production later)
+@app.get("/api/debug/cors")
+def debug_cors():
+    return {
+        "allowed_origins": allowed_origins,
+        "env_raw": os.getenv("CORS_ORIGINS"),
+        "note": "Remove /api/debug/cors in production once CORS verified."
+    }
+
 
 # Pydantic Models
 class LoginRequest(BaseModel):
