@@ -2,6 +2,7 @@
 Gods Ping - FastAPI Backend
 Main API endpoints for Shichi-Fukujin single-page trading platform
 """
+import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -28,10 +29,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS
+# CORS - Read from environment variable
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000")
+allowed_origins = [origin.strip() for origin in CORS_ORIGINS.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
