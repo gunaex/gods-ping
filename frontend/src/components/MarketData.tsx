@@ -30,7 +30,7 @@ export default function MarketData({ symbol }: MarketDataProps) {
           marketAPI.getTicker(symbol),
           marketAPI.getCandles(symbol, '1h', 100),
           marketAPI.getForecast(symbol, 6),
-          marketAPI.getForecastHistory(symbol, 5),
+          marketAPI.getForecastHistory(symbol, 5), // backend now handles pair route; axios encodes params
         ]);
         setTicker(tickerRes.data);
         setCandles(candlesRes.data.candles);
